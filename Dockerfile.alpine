@@ -1,0 +1,39 @@
+FROM rust:alpine
+
+ARG LLVM_VERSION=15
+
+ENV RUSTUP_HOME=/usr/local/rustup \
+  CARGO_HOME=/usr/local/cargo \
+  PATH=/usr/local/cargo/bin:$PATH \
+  CC=clang \
+  CXX=clang++ \
+  CC_x86_64_unknown_linux_gnu=clang \
+  CXX_x86_64_unknown_linux_gnu=clang++ \
+  RUST_TARGET=x86_64-unknown-linux-gnu \
+  LDFLAGS="-fuse-ld=lld"
+
+RUN apk add \
+  llvm${LLVM_VERSION} \
+  clang${LLVM_VERSION} \
+  lld \
+  nodejs \
+  npm \
+  git \
+  make \
+  cmake \
+  python3 \
+  musl-dev \
+  && \
+  npm install -g yarn pnpm lerna && \
+  (ln -sf /usr/bin/aarch64-alpine-linux-musl-gcc /usr/bin/aarch64-linux-musl-gcc || true)
+
+ARG NASM_VERSION=2.16.01
+RUN wget https://www.nasm.us/pub/nasm/releasebuilds/${NASM_VERSION}/nasm-${NASM_VERSION}.tar.xz && \
+  tar -xf nasm-${NASM_VERSION}.tar.xz && \
+  cd nasm-${NASM_VERSION} && \
+  ./configure --prefix=/usr/ && \
+  make && \
+  make install && \
+  cd / && \
+  rm -rf nasm-${NASM_VERSION} && \
+  rm nasm-${NASM_VERSION}.tar.xz
